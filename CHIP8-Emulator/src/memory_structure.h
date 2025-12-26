@@ -9,13 +9,16 @@ class Memory_Structure {
 
     //Stack
     //Also acts as base pointer
-    std::vector<uint16_t> mstack_chunk;
+    std::vector<uint8_t> mstack_chunk;
 
     //Stack Pointer
-    uint16_t* mstack_pointer;
+    uint8_t* mstack_pointer;
     
     //Code Chunk
-    std::vector<uint16_t> mcode_chunk;
+    std::vector<uint8_t> mmemory_chunk;
+    
+    //Program Counter used to iterate through code chunk data
+    uint8_t* mprogram_counter;
 
     //Registers
     int16_t V0;
@@ -40,6 +43,8 @@ class Memory_Structure {
 
     Memory_Structure(std::ifstream& rom_stream, int data_length);
     ~Memory_Structure();
+
+    void print_memory(); //Test function for checking memory
 
     
 

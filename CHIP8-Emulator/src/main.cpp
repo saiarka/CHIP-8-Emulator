@@ -26,11 +26,11 @@ int main(int argc, char* argv[])
         return 0;
     }
 
-    //Determine if ROM size is greater than available for hardware (3232 bytes)
+    //Determine if ROM size is greater than available for hardware (3600 bytes)
     
     auto rom_size = std::filesystem::file_size(argv[1]);
     
-    if (rom_size > 3232) {
+    if (rom_size > 3600) {
         std::cout << "ROM size too large for current CHIP-8 Emu Specification" << std::endl;
         return 0;
     }
@@ -40,7 +40,12 @@ int main(int argc, char* argv[])
    //ROM loaded into Memory class code chunk
    //PC can iterate through and fetch instructions --> fetch, decode, execute all within respective 'op code functions'
    Emulator emulator(rom_stream, rom_size);
+   bool not_at_end = 1;
+   while(not_at_end) {
+    
+       
 
+   }
 
    //Emulator class performs fetch,decode,execute for all op codes
    //Holds memory class --> Holds main memory, stack, register values

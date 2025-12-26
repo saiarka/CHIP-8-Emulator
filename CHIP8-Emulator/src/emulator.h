@@ -12,7 +12,9 @@ class Emulator {
     public:
       
         Emulator(std::ifstream& rom_stream, int rom_size); //Init 
-        ~Emulator(); //Destructor
+        ~Emulator() = default; //Destructor
+        
+        void fetch();
 
         void decode();
 
