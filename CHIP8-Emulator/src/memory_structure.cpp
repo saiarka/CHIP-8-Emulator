@@ -44,6 +44,23 @@ void Memory_Structure::print_memory() {
     }
 };
 
+void Memory_Structure::increment_program_counter() {
+    mprogram_counter += 2;
+};
+
+//TODO: Test
+uint16_t Memory_Structure::get_current_instruction() {
+
+    uint8_t hex_1 = *mprogram_counter;
+    uint8_t hex_2 = *(mprogram_counter + 1);
+
+    uint16_t inst = 0 || (hex_1 << 8) || hex_2;
+    increment_program_counter();
+
+    return inst;
+
+};
+
 
 
 

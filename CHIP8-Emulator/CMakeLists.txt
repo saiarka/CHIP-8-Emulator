@@ -17,12 +17,4 @@ add_subdirectory("tests")
 
 add_subdirectory(vendors/SDL EXCLUDE_FROM_ALL)
 
-include(FetchContent)
-FetchContent_Declare(
-    googletest
-    URL https://github.com/google/googletest/commit/52eb8108c5bdec04579160ae17225d66034bd723.zip
-)
-
-set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
-FetchContent_MakeAvailable(googletest)
 

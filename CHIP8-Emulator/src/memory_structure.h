@@ -45,6 +45,11 @@ class Memory_Structure {
     ~Memory_Structure();
 
     void print_memory(); //Test function for checking memory
+                         
+    uint16_t get_current_instruction();
+
+    void increment_program_counter();
+
 
     
 
