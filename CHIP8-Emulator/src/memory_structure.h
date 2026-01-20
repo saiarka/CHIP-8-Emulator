@@ -41,17 +41,18 @@ class Memory_Structure {
    
     public:
 
-    Memory_Structure(std::ifstream& rom_stream, int data_length);
-    ~Memory_Structure();
+        Memory_Structure(std::ifstream& rom_stream, int data_length);
+        ~Memory_Structure();
 
-    void print_memory(); //Test function for checking memory
-                         
-    uint16_t get_current_instruction();
+        void print_memory(); //Test function for checking memory
+                             
+        uint16_t get_current_instruction();
 
-    void increment_program_counter();
+        void increment_program_counter();
 
+        void jump_to_memory(uint16_t memory_address);
 
-    
+        uint16_t read_register_value(uint16_t X);
 
 
 };
