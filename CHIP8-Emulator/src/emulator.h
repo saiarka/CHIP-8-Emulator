@@ -8,6 +8,8 @@ class Emulator {
     
     Memory_Structure mMemory;
 
+    uint8_t delay_timer;
+    uint8_t sound_timer;
 
     public:
       
@@ -34,6 +36,10 @@ class Emulator {
         void thirteen_instructions(uint16_t cur_inst);
         void fourteen_instructions(uint16_t cur_inst);
         void fifteen_instructions(uint16_t cur_inst);
+
+        //Helper Functions
+        void reg_dump(uint16_t cur_inst , uint16_t add_reg_loc);
+        void reg_load(uint16_t cur_inst, uint16_t add_reg_loc);
         
 
 };

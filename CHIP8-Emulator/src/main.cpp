@@ -39,6 +39,7 @@ int main(int argc, char* argv[])
    //ROM read in --> given to Emulator class
    //ROM loaded into Memory class code chunk
    //PC can iterate through and fetch instructions --> fetch, decode, execute all within respective 'op code functions'
+   // Try Catch block for loop or run() function which acts as loop (try every loop expensive?)
    Emulator emulator(rom_stream, rom_size);
    bool not_at_end = 1;
    while(not_at_end) {

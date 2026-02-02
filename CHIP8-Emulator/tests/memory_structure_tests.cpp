@@ -3,7 +3,6 @@
 #include "memory_structure_tests.h"
 #include <iostream>
 #include <iomanip>
-//TODO: Fix include (is directory specific)
 
 
 TEST_F(Memory_StructureTest, TestGetInstruction) {
