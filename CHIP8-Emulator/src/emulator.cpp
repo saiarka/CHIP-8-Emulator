@@ -6,7 +6,11 @@
 
 
 Emulator::Emulator(std::ifstream& rom_stream, int rom_size) : 
-    mMemory(rom_stream, rom_size){};
+    mMemory(rom_stream, rom_size)
+    {
+        mcontainer.init();
+
+    };
 
 
 //Output used by decode_execute to find and execute relevant op code
@@ -84,11 +88,13 @@ void Emulator::decode_execute() {
 }
 
 
-//TODO : Implement instruction functions
+//TODO : Test, Validate
 void Emulator::zero_instructions(uint16_t cur_inst) {
     switch(cur_inst) {
         case 0x00E0:
-            //TODO: Display Inst
+            SDL_SetRenderDrawColor(mcontainer.renderer, 0xFF, 0xFF, 0xFF, SDL_ALPHA_OPAQUE);
+            SDL_RenderClear(mcontainer.renderer);
+            SDL_RenderPresent(mcontainer.renderer);
             break;
         case 0x00EE:
             mMemory.decrement_stack();

@@ -2,11 +2,14 @@
 #define EMULATOR_H_
 
 #include "memory_structure.h"
+#include "container.h"
+
 #include <fstream>
 
 class Emulator {
     
     Memory_Structure mMemory;
+    SDL_Container mcontainer;
 
     uint8_t delay_timer;
     uint8_t sound_timer;
