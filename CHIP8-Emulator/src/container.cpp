@@ -2,7 +2,7 @@
 #include <cassert>
 #include <iostream>
 
-void SDL_Container::init() {
+SDL_Container::SDL_Container() {
     if ( SDL_Init( SDL_INIT_VIDEO) < 0) {
         std::cout << "SDL COULD NOT BE INIT!! SDL_Error:  " << SDL_GetError() << std::endl; 
         assert(0);
@@ -18,10 +18,18 @@ void SDL_Container::init() {
         std::cout << "SDL COULD NOT MAKE RENDERER!! SDL_Error: " << SDL_GetError() << std::endl;
         assert(0);
     }
-    SDL_SetRenderDrawColor(renderer, 0xFF, 0xFF, 0xFF, SDL_ALPHA_OPAQUE);
+    SDL_SetRenderDrawColor(renderer, 0x00, 0x00, 0x00, SDL_ALPHA_OPAQUE);
     SDL_RenderClear(renderer);
     SDL_RenderPresent(renderer);
+
+    pixel_screen = std::vector<uint8_t>(SCREEN_WIDTH, 0);
 };
+
+SDL_Container::~SDL_Container() {
+    SDL_DestroyWindow(window);
+    SDL_DestroyRenderer(renderer);
+    SDL_Quit();
+}
 
 
 

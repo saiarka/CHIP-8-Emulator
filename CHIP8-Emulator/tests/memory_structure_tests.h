@@ -21,8 +21,6 @@ class Memory_StructureTest : public testing::Test {
             test_memory = std::make_unique<Memory_Structure>(rom_stream, std::filesystem::file_size(test_rom));
         }
 
-
 };
-
 
 #endif

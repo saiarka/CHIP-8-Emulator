@@ -8,21 +8,21 @@
 
 class Emulator {
     
-    Memory_Structure mMemory;
-    SDL_Container mcontainer;
-
-    uint8_t delay_timer;
-    uint8_t sound_timer;
-
     public:
+
+        Memory_Structure mMemory;
+        SDL_Container mcontainer;
+
+        uint8_t delay_timer;
+        uint8_t sound_timer;
       
         Emulator(std::ifstream& rom_stream, int rom_size); //Init 
         ~Emulator() = default; //Destructor
         
         uint16_t fetch();
-
         void decode_execute();
-
+        
+        //OP Code Instruction Functions
         void zero_instructions(uint16_t cur_inst);
         void one_instructions(uint16_t cur_inst);
         void two_instructions(uint16_t cur_inst);

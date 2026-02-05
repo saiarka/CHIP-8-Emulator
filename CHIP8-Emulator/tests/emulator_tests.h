@@ -1,7 +1,6 @@
 #ifndef _EMULATOR_TESTS_H_
 #define _EMULATOR_TESTS_H_
 
-
 #include "../src/emulator.h"
 #include <gtest/gtest.h>
 #include <iostream>

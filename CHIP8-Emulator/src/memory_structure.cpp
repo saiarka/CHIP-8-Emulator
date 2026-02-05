@@ -11,7 +11,8 @@ Memory_Structure::Memory_Structure(std::ifstream& rom_stream, int rom_size) {
     mprogram_counter = mmemory_chunk.data() + 512;
 
     mstack_chunk = std::vector<uint64_t>(16, 0);
-    mstack_pointer = mstack_chunk.data();
+    mstack_index = 0;
+    
 
 V0 = 0;
     V1 = 0;
@@ -34,10 +35,7 @@ V0 = 0;
 };
 
 Memory_Structure::~Memory_Structure() {
-
     mprogram_counter = nullptr;
-    mstack_pointer = nullptr;
-
 };
 
 void Memory_Structure::print_memory() {
@@ -155,7 +153,7 @@ void Memory_Structure::set_register_value(uint16_t X, uint8_t new_value){
             break;
         case 0x0008:
             V8 = new_value;
-            break;
+            break; 
         case 0x0009:
             V9 = new_value;
             break;
@@ -184,26 +182,34 @@ void Memory_Structure::set_register_value(uint16_t X, uint8_t new_value){
     }
 };
 
+//TODO: Test, Validate
 uint16_t Memory_Structure::read_address_register() const{
     return address_register;
 }
 
-//TODO: Validate
+//TODO: Test, Validate
 void Memory_Structure::set_address_register(uint16_t new_value) {
     address_register = new_value;
 };
 
 
-//TODO: Test, Validate
+//TODO: Validate
 void Memory_Structure::increment_stack() {
-    *mstack_pointer = (uint64_t) mprogram_counter + 2;
-    mstack_pointer += 1;
+    if (mstack_index == 16) {
+        throw CHIP_8_Emulator::CPU_Exception("Stack Function Overflow!");
+    }
+    mstack_chunk[mstack_index] = (uint64_t) mprogram_counter + 2;
+    mstack_index++;
 };
 
 //TODO: Test, Validate
 void Memory_Structure::decrement_stack() {
-    mstack_pointer -= 1;
-    mprogram_counter = mmemory_chunk.data() + (*mstack_pointer);
+    if (mstack_index == 0) {
+        throw CHIP_8_Emulator::CPU_Exception("Invalid Memory Reach in Stack!");
+    }
+    mstack_index--;
+    mprogram_counter = (unsigned char*)mstack_chunk[mstack_index];
+    mstack_chunk[mstack_index] = 0;
 };
 
 

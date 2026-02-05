@@ -1,5 +1,6 @@
 ﻿// main.cpp : Defines the entry point for the application.
 
+#include "emulator_exceptions.h"
 #include "emulator.h"
 #include "container.h"
 
@@ -47,9 +48,13 @@ int main(int argc, char* argv[])
                 quit = true;
             }
 
+            try {
+                emulator.decode_execute();
+            }catch(const CHIP_8_Emulator::CPU_Exception& e) {
+                quit = true;  
+            }
         }
     }
-
 	return 0;
 
 }
