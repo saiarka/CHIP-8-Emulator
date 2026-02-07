@@ -8,8 +8,6 @@
 Emulator::Emulator(std::ifstream& rom_stream, int rom_size) : 
     mMemory(rom_stream, rom_size), mcontainer() {}
 
-
-//Output used by decode_execute to find and execute relevant op code
 //TODO: Needless abstraction? Look into 
 uint16_t Emulator::fetch() {
     uint16_t instr = mMemory.get_current_instruction();
@@ -79,17 +77,17 @@ void Emulator::decode_execute() {
 }
 
 
-//TODO : Test
+//TODO: Test
 void Emulator::zero_instructions(uint16_t cur_inst) {
     switch(cur_inst) {
         case 0x00E0:
-            std::cout << "0x00EO inst called" << std::endl;
-            SDL_SetRenderDrawColor(mcontainer.renderer, 0xFF, 0xFF, 0xFF, SDL_ALPHA_OPAQUE);
+            std::cout << "00EO inst called" << std::endl;
+            SDL_SetRenderDrawColor(mcontainer.renderer, 0x00, 0x00, 0x00, SDL_ALPHA_OPAQUE);
             SDL_RenderClear(mcontainer.renderer);
             SDL_RenderPresent(mcontainer.renderer);
             break;
         case 0x00EE:
-            std::cout << "0x00EE inst called" << std::endl;
+            std::cout << "00EE inst called" << std::endl;
             mMemory.decrement_stack();
             break;
         default:
@@ -99,11 +97,12 @@ void Emulator::zero_instructions(uint16_t cur_inst) {
 
 //TODO: Test
 void Emulator::one_instructions(uint16_t cur_inst) {
+    std::cout << "1NNN inst called" << std::endl;
     uint16_t address_to_jump = cur_inst & 0x0FFF;
     mMemory.jump_to_memory(address_to_jump);
 }
 
-//TODO : Test 
+//TODO: Test
 void Emulator::two_instructions(uint16_t cur_inst) {
     uint16_t subroutine_location = cur_inst & 0x0FFF;
     mMemory.increment_stack();
@@ -141,6 +140,7 @@ void Emulator::five_instructions(uint16_t cur_inst) {
 }
 //TODO : Test 
 void Emulator::six_instructions(uint16_t cur_inst) {
+    std::cout << "6xnn inst called" << std::endl;
     uint8_t NN = (uint8_t)(cur_inst & 0x00FF);
     uint16_t X = (cur_inst & 0x0F00) >> 8; 
     mMemory.set_register_value(X, NN);
@@ -223,8 +223,8 @@ void Emulator::nine_instructions(uint16_t cur_inst) {
     }
 }
 
-//TODO : Test 
 void Emulator::ten_instructions(uint16_t cur_inst) {
+    std::cout << "ANNN inst called" << std::endl;
     uint16_t NNN = (cur_inst & 0x0FFF);
     mMemory.set_address_register(NNN);
 }
@@ -246,43 +246,46 @@ void Emulator::twelve_instructions(uint16_t cur_inst) {
     mMemory.set_register_value(X, NN & random);
 }
 
-//TODO : Test, Validate 
+//TODO : Fix 
 //Notes:
 //  - If VX and VY are max 8 bit values, max x and y are 0-255?
 //  - Assumes N is not zero
 void Emulator::thirteen_instructions(uint16_t cur_inst) {
+    std::cout << "Dxyn inst called" << std::endl;
 
     uint16_t X = (cur_inst & 0x0F00) >> 8;
     uint16_t Y = (cur_inst & 0x00F0) >> 4;
     uint16_t N = (cur_inst & 0x000F);
     uint8_t VX = mMemory.read_register_value(X) % mcontainer.SCREEN_WIDTH;
-    uint8_t VY = mMemory.read_register_value(Y) % mcontainer.SCREEN_WIDTH;
+    uint8_t VY = mMemory.read_register_value(Y) % mcontainer.SCREEN_HEIGHT;
     uint16_t add_reg_loc = mMemory.read_address_register() & 0x0FFF;
     mMemory.set_register_value(0x000F, 0);
     
-    for (int i = 0; i < N; i++) {
-        if (VY + N > mcontainer.SCREEN_HEIGHT) {return;}
-
-        uint8_t memory_byte = mMemory.read_memory_at(add_reg_loc + i);
-        uint8_t pixel_byte = mcontainer.pixel_screen[(VY+N) * mcontainer.SCREEN_WIDTH + VX];
-        uint8_t byte_diff = memory_byte ^ pixel_byte; 
-        if ((byte_diff & memory_byte) != memory_byte & mMemory.read_register_value(0x000F) != 1) {
-            mMemory.set_register_value(0x000F, 1);
-        }
-
-        mcontainer.pixel_screen[(VY+N) * mcontainer.SCREEN_WIDTH + VX] = byte_diff;
-        SDL_RenderClear(mcontainer.renderer);
-        for (int j = 0; j < 8; j++) {
-            if (VX + i > mcontainer.SCREEN_WIDTH) {continue;}
-
-            if (mcontainer.pixel_screen[(VY+N) * 256 + (VX + j)] & (0x80 >> j)) {
-                SDL_SetRenderDrawColor(mcontainer.renderer, 0xFF, 0xFF, 0xFF, SDL_ALPHA_OPAQUE);
-            }else {
-                SDL_SetRenderDrawColor(mcontainer.renderer, 0x00, 0x00, 0x00, SDL_ALPHA_OPAQUE);
+    int i = 0, j = 0;
+    for (uint8_t row = VY; row < VY + N; row++) {
+        uint8_t mem_byte = mMemory.read_memory_at(add_reg_loc + i);
+        i++;
+        j = 0;
+        for (uint8_t pixel = VX; pixel < VX + 8; pixel++) {
+            uint8_t cur_pix = mcontainer.pixel_screen[row * mcontainer.SCREEN_WIDTH + pixel];
+            uint8_t new_pix = (mem_byte & (0x80 >> j)) >> (7 - j);
+            j++;
+            if (cur_pix == 1 && new_pix == 1 && mMemory.read_register_value(0x000F) != 1) {
+                mMemory.set_register_value(0x000F, 1);
             }
-            SDL_RenderPoint(mcontainer.renderer, VX + j, VY + i);
+            
+            if ((cur_pix ^ new_pix) == 1) {
+                if (new_pix == 0) {
+                    SDL_SetRenderDrawColor(mcontainer.renderer, 0x00, 0x00, 0x00, SDL_ALPHA_OPAQUE);
+                }else {
+                    SDL_SetRenderDrawColor(mcontainer.renderer, 0xFF, 0xFF, 0xFF, SDL_ALPHA_OPAQUE);
+                }
+                mcontainer.pixel_screen[row * mcontainer.SCREEN_WIDTH + pixel] = new_pix;
+                SDL_RenderPoint(mcontainer.renderer, pixel, row);
+            }
         }
     }
+    SDL_RenderPresent(mcontainer.renderer);
 }
 
 //TODO : Implement instruction functions

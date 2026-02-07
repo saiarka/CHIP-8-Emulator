@@ -22,10 +22,11 @@ SDL_Container::SDL_Container() {
     SDL_RenderClear(renderer);
     SDL_RenderPresent(renderer);
 
-    pixel_screen = std::vector<uint8_t>(SCREEN_WIDTH, 0);
+    pixel_screen = std::vector<uint8_t>(SCREEN_WIDTH*SCREEN_HEIGHT, 0);
 };
 
 SDL_Container::~SDL_Container() {
+    std::cout << "SDL_Container Destructor called" << std::endl;
     SDL_DestroyWindow(window);
     SDL_DestroyRenderer(renderer);
     SDL_Quit();

@@ -13,8 +13,7 @@ Memory_Structure::Memory_Structure(std::ifstream& rom_stream, int rom_size) {
     mstack_chunk = std::vector<uint64_t>(16, 0);
     mstack_index = 0;
     
-
-V0 = 0;
+    V0 = 0;
     V1 = 0;
     V2 = 0;
     V3 = 0;
@@ -50,39 +49,32 @@ void Memory_Structure::increment_program_counter() {
 };
 
 uint16_t Memory_Structure::get_current_instruction() {
-
     uint8_t hex_1 = *mprogram_counter;
     uint8_t hex_2 = *(mprogram_counter + 1);
     uint16_t inst = ((uint16_t)hex_1 << 8) | (uint16_t)hex_2;
     increment_program_counter();
 
     return inst;
-
 };
 
-//TODO: Test
 void Memory_Structure::jump_to_memory(uint16_t memory_address) {
-    if (memory_address >= 4096 || memory_address < 0) { throw CHIP_8_Emulator::CPU_Exception("Out Of Range Memory Access"); }
+    if (memory_address > 4096 || memory_address < 0) { throw CHIP_8_Emulator::CPU_Exception("Out Of Range Memory Access"); }
     mprogram_counter = mmemory_chunk.data() + memory_address;
 };
 
-//TODO: Test 
 void Memory_Structure::set_memory_at(uint16_t memory_address, uint16_t new_memory) {
-    if (memory_address >= 4096 || memory_address < 0) { throw CHIP_8_Emulator::CPU_Exception("Out Of Range Memory Access"); }
+    if (memory_address > 4096 || memory_address < 0) { throw CHIP_8_Emulator::CPU_Exception("Out Of Range Memory Access"); }
     uint8_t first_half = (new_memory >> 8);
     uint8_t second_half = (new_memory & 0x00FF);
     mmemory_chunk[memory_address] = first_half;
     mmemory_chunk[memory_address+1] = second_half;
 };
 
-//TODO: Test
 uint8_t Memory_Structure::read_memory_at(uint16_t memory_address) const {
     return mmemory_chunk[memory_address];
 }
 
-//TODO: Test, Check for more robust edge case handling
 uint8_t Memory_Structure::read_register_value(uint16_t X) const{
-
     switch(X) {
         case 0x0000:
             return V0;
@@ -117,14 +109,10 @@ uint8_t Memory_Structure::read_register_value(uint16_t X) const{
         case 0x000F:
             return VF;
         default:
-            std::cout << "ATTENTION: DEFAULT REGISTER VALUE AT VF RETURNED" << std::endl;
             throw CHIP_8_Emulator::CPU_Exception("Invalid Register Error");
     }
-
 };
 
-//TODO: Test
-//Add protection against setting VF to anything other than 0 or 1
 void Memory_Structure::set_register_value(uint16_t X, uint8_t new_value){
     switch(X) {
         case 0x0000:
@@ -173,6 +161,9 @@ void Memory_Structure::set_register_value(uint16_t X, uint8_t new_value){
             VE = new_value;
             break;
         case 0x000F:
+            if (new_value != 0 && new_value != 1) {
+                throw CHIP_8_Emulator::CPU_Exception("Invalid VF Register value input");
+            }
             VF = new_value;
             break;
         default:
@@ -182,18 +173,16 @@ void Memory_Structure::set_register_value(uint16_t X, uint8_t new_value){
     }
 };
 
-//TODO: Test, Validate
 uint16_t Memory_Structure::read_address_register() const{
     return address_register;
 }
 
-//TODO: Test, Validate
+//TODO: First 4 bits might be used for LOAD FONT inst
 void Memory_Structure::set_address_register(uint16_t new_value) {
     address_register = new_value;
 };
 
 
-//TODO: Validate
 void Memory_Structure::increment_stack() {
     if (mstack_index == 16) {
         throw CHIP_8_Emulator::CPU_Exception("Stack Function Overflow!");
@@ -202,7 +191,6 @@ void Memory_Structure::increment_stack() {
     mstack_index++;
 };
 
-//TODO: Test, Validate
 void Memory_Structure::decrement_stack() {
     if (mstack_index == 0) {
         throw CHIP_8_Emulator::CPU_Exception("Invalid Memory Reach in Stack!");
