@@ -9,9 +9,8 @@ class SDL_Container {
 
     public:
         
-        //TODO: Temp Screen h, w --> Based on maximum VX, VY
-        const int SCREEN_WIDTH = 1280;
-        const int SCREEN_HEIGHT = 720;
+        const int SCREEN_WIDTH = 64;
+        const int SCREEN_HEIGHT = 32;
 
         std::vector<uint8_t> pixel_screen;
 

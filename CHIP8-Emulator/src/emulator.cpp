@@ -1,8 +1,10 @@
 
 #include "emulator.h"
 #include "emulator_exceptions.h"
+
 #include <iostream>
 #include <random>
+#include <chrono>
 
 
 Emulator::Emulator(std::ifstream& rom_stream, int rom_size) : 
@@ -81,13 +83,13 @@ void Emulator::decode_execute() {
 void Emulator::zero_instructions(uint16_t cur_inst) {
     switch(cur_inst) {
         case 0x00E0:
-            std::cout << "00EO inst called" << std::endl;
+            std::cout << "00EO inst called\n"; 
             SDL_SetRenderDrawColor(mcontainer.renderer, 0x00, 0x00, 0x00, SDL_ALPHA_OPAQUE);
             SDL_RenderClear(mcontainer.renderer);
             SDL_RenderPresent(mcontainer.renderer);
             break;
         case 0x00EE:
-            std::cout << "00EE inst called" << std::endl;
+            std::cout << "00EE inst called\n" << std::endl;
             mMemory.decrement_stack();
             break;
         default:
@@ -95,9 +97,8 @@ void Emulator::zero_instructions(uint16_t cur_inst) {
     }
 }
 
-//TODO: Test
 void Emulator::one_instructions(uint16_t cur_inst) {
-    std::cout << "1NNN inst called" << std::endl;
+    //std::cout << "1NNN inst called\n";
     uint16_t address_to_jump = cur_inst & 0x0FFF;
     mMemory.jump_to_memory(address_to_jump);
 }
@@ -138,24 +139,26 @@ void Emulator::five_instructions(uint16_t cur_inst) {
         mMemory.increment_program_counter();
     }
 }
-//TODO : Test 
+
 void Emulator::six_instructions(uint16_t cur_inst) {
-    std::cout << "6xnn inst called" << std::endl;
+    auto start = std::chrono::steady_clock().now();
+
     uint8_t NN = (uint8_t)(cur_inst & 0x00FF);
     uint16_t X = (cur_inst & 0x0F00) >> 8; 
     mMemory.set_register_value(X, NN);
+
+    auto end = std::chrono::steady_clock().now();
+    std::cout << "6XNN inst time : " << std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count() << "(ms)\n";
 }
 
 //TODO : Test
-//Ensure carry flag not changed
 void Emulator::seven_instructions(uint16_t cur_inst) {
     uint16_t NN = (cur_inst & 0x00FF);
     uint16_t X = (cur_inst & 0x0F00) >> 8; 
     uint8_t comb = (uint8_t)(NN + X);
     mMemory.set_register_value(X, comb);
-    
-    return;
 }
+
 //TODO : Test 
 //Optimize? Many calculations per inst --> Seperate into functions
 void Emulator::eight_instructions(uint16_t cur_inst) {
@@ -224,9 +227,11 @@ void Emulator::nine_instructions(uint16_t cur_inst) {
 }
 
 void Emulator::ten_instructions(uint16_t cur_inst) {
-    std::cout << "ANNN inst called" << std::endl;
+    auto start = std::chrono::steady_clock().now();
     uint16_t NNN = (cur_inst & 0x0FFF);
     mMemory.set_address_register(NNN);
+    auto end = std::chrono::steady_clock().now();
+    std::cout << "ANNN inst time : " << std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count() << "(ms)\n";
 }
 
 //TODO : Test 
@@ -246,12 +251,11 @@ void Emulator::twelve_instructions(uint16_t cur_inst) {
     mMemory.set_register_value(X, NN & random);
 }
 
-//TODO : Fix 
-//Notes:
-//  - If VX and VY are max 8 bit values, max x and y are 0-255?
-//  - Assumes N is not zero
+//TODO : Optimize
+//Notes: 
+// - loop performs new render each pixel --> Put changes into buffer?
 void Emulator::thirteen_instructions(uint16_t cur_inst) {
-    std::cout << "Dxyn inst called" << std::endl;
+    auto start = std::chrono::steady_clock().now();
 
     uint16_t X = (cur_inst & 0x0F00) >> 8;
     uint16_t Y = (cur_inst & 0x00F0) >> 4;
@@ -285,7 +289,10 @@ void Emulator::thirteen_instructions(uint16_t cur_inst) {
             }
         }
     }
-    SDL_RenderPresent(mcontainer.renderer);
+
+    auto end = std::chrono::steady_clock().now();
+    std::cout << "Dxyn inst time : " << std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count() << "(ms)\n";
+
 }
 
 //TODO : Implement instruction functions
