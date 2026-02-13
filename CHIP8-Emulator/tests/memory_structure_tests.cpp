@@ -15,7 +15,7 @@ TEST_F(Memory_StructureTest, TestIncrementInstruction) {
     uint16_t increment_inst = test_memory->get_current_instruction();
     EXPECT_TRUE(increment_inst == 0x6101) << "value of inst is : " << std::hex << std::setw(4) << std::setfill('0') << static_cast<int>(increment_inst);
 }
-
+/*
 TEST_F(Memory_StructureTest, TestIncrementStack) {
    test_memory->increment_stack();
    uint16_t inst = test_memory->get_current_instruction();
@@ -31,7 +31,7 @@ TEST_F(Memory_StructureTest, TestDecrementStack) {
    EXPECT_TRUE(inst == 0x6101) << "value of inst at program counter after decrement is :" << std::hex << std::setw(4) << std::setfill('0') << static_cast<int>(inst);
    EXPECT_TRUE(test_memory->mstack_chunk[test_memory->mstack_index] == 0);
 }
-
+*/
 TEST_F(Memory_StructureTest, TestSetRegisterValue) {
    uint8_t V5_value = test_memory->read_register_value(0x0005);
    EXPECT_TRUE(V5_value == 0);

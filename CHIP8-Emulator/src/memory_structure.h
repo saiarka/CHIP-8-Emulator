@@ -11,7 +11,7 @@ class Memory_Structure {
 
         //Stack
         //Also acts as base pointer
-        std::vector<uint64_t> mstack_chunk;
+        std::vector<uint8_t*> mstack_chunk;
         //Stack Pointer
         int mstack_index;
         

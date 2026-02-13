@@ -5,6 +5,7 @@
 #include <iostream>
 #include <random>
 #include <chrono>
+#include <iomanip>
 
 
 Emulator::Emulator(std::ifstream& rom_stream, int rom_size) : 
@@ -79,17 +80,14 @@ void Emulator::decode_execute() {
 }
 
 
-//TODO: Test
 void Emulator::zero_instructions(uint16_t cur_inst) {
     switch(cur_inst) {
         case 0x00E0:
-            std::cout << "00EO inst called\n"; 
             SDL_SetRenderDrawColor(mcontainer.renderer, 0x00, 0x00, 0x00, SDL_ALPHA_OPAQUE);
             SDL_RenderClear(mcontainer.renderer);
             SDL_RenderPresent(mcontainer.renderer);
             break;
         case 0x00EE:
-            std::cout << "00EE inst called\n" << std::endl;
             mMemory.decrement_stack();
             break;
         default:
@@ -103,33 +101,30 @@ void Emulator::one_instructions(uint16_t cur_inst) {
     mMemory.jump_to_memory(address_to_jump);
 }
 
-//TODO: Test
 void Emulator::two_instructions(uint16_t cur_inst) {
     uint16_t subroutine_location = cur_inst & 0x0FFF;
     mMemory.increment_stack();
     mMemory.jump_to_memory(subroutine_location);
 }
 
-//TODO : Test 
 void Emulator::three_instructions(uint16_t cur_inst) {
     uint8_t NN = (uint8_t)(cur_inst & 0x00FF);
     uint16_t X = (cur_inst & 0x0F00) >> 8; 
-    uint8_t register_value = mMemory.read_register_value(X);
-    if (register_value == NN) {
+    uint8_t VX = mMemory.read_register_value(X);
+    if (VX == NN) {
         mMemory.increment_program_counter();
     }
 }
 
-//TODO : Test
 void Emulator::four_instructions(uint16_t cur_inst) {
     uint8_t NN = (uint8_t)(cur_inst & 0x00FF);
     uint16_t X = (cur_inst & 0x0F00) >> 8; 
-    uint8_t register_value = mMemory.read_register_value(X);
-    if (register_value != NN) {
+    uint8_t VX = mMemory.read_register_value(X);
+    if (VX != NN) {
         mMemory.increment_program_counter();
     }
 }
-//TODO : Test 
+
 void Emulator::five_instructions(uint16_t cur_inst) {
     uint16_t X = (cur_inst & 0x0F00) >> 8; 
     uint16_t Y = (cur_inst & 0x00F0) >> 4;
@@ -141,41 +136,32 @@ void Emulator::five_instructions(uint16_t cur_inst) {
 }
 
 void Emulator::six_instructions(uint16_t cur_inst) {
-    auto start = std::chrono::steady_clock().now();
-
     uint8_t NN = (uint8_t)(cur_inst & 0x00FF);
     uint16_t X = (cur_inst & 0x0F00) >> 8; 
     mMemory.set_register_value(X, NN);
-
-    auto end = std::chrono::steady_clock().now();
-    std::cout << "6XNN inst time : " << std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count() << "(ms)\n";
 }
 
-//TODO : Test
 void Emulator::seven_instructions(uint16_t cur_inst) {
-    uint16_t NN = (cur_inst & 0x00FF);
-    uint16_t X = (cur_inst & 0x0F00) >> 8; 
-    uint8_t comb = (uint8_t)(NN + X);
+    uint8_t NN = (cur_inst & 0x00FF);
+    uint16_t X = (cur_inst & 0x0F00) >> 8;
+    uint8_t VX = mMemory.read_register_value(X);
+    uint8_t comb = (NN + VX);
     mMemory.set_register_value(X, comb);
 }
 
-//TODO : Test 
-//Optimize? Many calculations per inst --> Seperate into functions
 void Emulator::eight_instructions(uint16_t cur_inst) {
-
     uint16_t flag = cur_inst & 0x000F;
     uint16_t X = (cur_inst & 0x0F00) >> 8;
     uint16_t Y = (cur_inst & 0x00F0) >> 4;
     uint8_t VX = mMemory.read_register_value(X);
     uint8_t VY = mMemory.read_register_value(Y);
 
-    uint16_t big_sum = (uint16_t)VX + (uint16_t)VY;
-    uint8_t vx_difference = VX - VY;
-    uint8_t vy_difference = VY - VX;
-    uint8_t is_overflow = ((big_sum >> 8) != 1) ? 1 : 0;
-    uint8_t five_underflow = (VX >= VY) ? 1 : 0;
-    uint8_t seven_underflow = (VY >= VX) ? 1 : 0;
-    uint8_t most_sig_set = ((VX & 0b10000000) != 0) ? 1 : 0;
+    uint16_t big_sum;
+    uint8_t is_overflow;
+    uint8_t vx_difference;
+    uint8_t underflow;
+    uint8_t vy_difference;
+    uint8_t most_sig_set;
 
     switch(flag) {
         case 0x0000:
@@ -191,22 +177,29 @@ void Emulator::eight_instructions(uint16_t cur_inst) {
             mMemory.set_register_value(X, VX ^ VY);
             break;
         case 0x0004:
-            mMemory.set_register_value(X, (uint8_t)big_sum);
+            big_sum = static_cast<uint16_t>(VX) + static_cast<uint16_t>(VY);
+            is_overflow = ((big_sum >> 8) != 0) ? 1 : 0;
+            mMemory.set_register_value(X, VX + VY);
             mMemory.set_register_value(0x000F, is_overflow);
             break;
         case 0x0005:
+            vx_difference = VX - VY;
+            underflow = (VX >= VY) ? 1 : 0;
             mMemory.set_register_value(X, vx_difference);
-            mMemory.set_register_value(0x000F, five_underflow);
+            mMemory.set_register_value(0x000F, underflow);
             break;
         case 0x0006:
-            mMemory.set_register_value(0x000F, (VX & 0x0F));
+            mMemory.set_register_value(0x000F, (VX & 0x01));
             mMemory.set_register_value(X, (VX >> 1));
             break;
         case 0x0007:
+            vy_difference = VY - VX;
+            underflow = (VY >= VX) ? 1 : 0;
             mMemory.set_register_value(X, vy_difference);
-            mMemory.set_register_value(0x000F, seven_underflow);
+            mMemory.set_register_value(0x000F, underflow);
             break;
         case 0x000E:
+            most_sig_set = ((VX & 0b10000000) != 0) ? 1 : 0;
             mMemory.set_register_value(X, (VX << 1));
             mMemory.set_register_value(0x000F, most_sig_set);
             break;
@@ -214,24 +207,20 @@ void Emulator::eight_instructions(uint16_t cur_inst) {
             throw CHIP_8_Emulator::CPU_Exception("Invalid OP CODE (Failed 8 Instruction)");
     }
 }
-//TODO : Test 
+
 void Emulator::nine_instructions(uint16_t cur_inst) {
     uint16_t X = (cur_inst & 0x0F00) >> 8;
     uint16_t Y = (cur_inst & 0x00F0) >> 4;
     uint8_t VX = mMemory.read_register_value(X);
     uint8_t VY = mMemory.read_register_value(Y);
-
     if (VX != VY) {
         mMemory.increment_program_counter();
     }
 }
 
 void Emulator::ten_instructions(uint16_t cur_inst) {
-    auto start = std::chrono::steady_clock().now();
     uint16_t NNN = (cur_inst & 0x0FFF);
     mMemory.set_address_register(NNN);
-    auto end = std::chrono::steady_clock().now();
-    std::cout << "ANNN inst time : " << std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count() << "(ms)\n";
 }
 
 //TODO : Test 
@@ -253,10 +242,7 @@ void Emulator::twelve_instructions(uint16_t cur_inst) {
 
 //TODO : Optimize
 //Notes: 
-// - loop performs new render each pixel --> Put changes into buffer?
 void Emulator::thirteen_instructions(uint16_t cur_inst) {
-    auto start = std::chrono::steady_clock().now();
-
     uint16_t X = (cur_inst & 0x0F00) >> 8;
     uint16_t Y = (cur_inst & 0x00F0) >> 4;
     uint16_t N = (cur_inst & 0x000F);
@@ -290,9 +276,6 @@ void Emulator::thirteen_instructions(uint16_t cur_inst) {
         }
     }
 
-    auto end = std::chrono::steady_clock().now();
-    std::cout << "Dxyn inst time : " << std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count() << "(ms)\n";
-
 }
 
 //TODO : Implement instruction functions
@@ -300,19 +283,19 @@ void Emulator::fourteen_instructions(uint16_t cur_inst) {
 
     return;
 }
+
 //TODO : Implement instruction functions
 void Emulator::fifteen_instructions(uint16_t cur_inst) {
-
     uint16_t detail = cur_inst & 0x00FF;
     uint16_t VX = mMemory.read_register_value((cur_inst & 0x0F00) >> 8);
     uint16_t add_reg = mMemory.read_address_register();
     uint16_t add_reg_loc = add_reg & 0x0FFF; 
-    if (add_reg_loc > 4096 || add_reg_loc < 4096) { throw CHIP_8_Emulator::CPU_Exception("Invalid address reg loc! (fifteen_inst)");}
+    if (add_reg_loc > 4096 || add_reg_loc < 0) { throw CHIP_8_Emulator::CPU_Exception("Invalid address reg loc! (fifteen_inst)");}
 
     //BCD Calc
-    uint16_t ones_digit = (VX % 10);
-    uint16_t tens_digit = ((VX / 10) % 10) * 10;
-    uint16_t hundreds_digit = (VX / 100) * 100; 
+    uint8_t ones_digit;
+    uint8_t tens_digit;
+    uint8_t hundreds_digit;
 
     switch(detail) {
         case 0x0007:
@@ -329,9 +312,12 @@ void Emulator::fifteen_instructions(uint16_t cur_inst) {
         case 0x0029:
             break;
         case 0x0033:
-            mMemory.set_memory_at(add_reg_loc, hundreds_digit);
-            mMemory.set_memory_at(add_reg_loc+1, hundreds_digit);
-            mMemory.set_memory_at(add_reg_loc+2, hundreds_digit);
+            ones_digit = (VX % 10);
+            tens_digit = ((VX / 10) % 10);
+            hundreds_digit = (VX / 100); 
+            mMemory.mmemory_chunk[add_reg_loc] = hundreds_digit;
+            mMemory.mmemory_chunk[add_reg_loc + 1] = tens_digit;
+            mMemory.mmemory_chunk[add_reg_loc + 2] = ones_digit;
             break;
         case 0x0055:
             reg_dump(cur_inst, add_reg_loc);
@@ -345,23 +331,21 @@ void Emulator::fifteen_instructions(uint16_t cur_inst) {
 }
 
 
-//TODO: Test
 void Emulator::reg_dump(uint16_t cur_inst, uint16_t add_reg_loc) {
     uint16_t X = (cur_inst & 0x0F00) >> 8;
     if (add_reg_loc + X > 4096) { throw CHIP_8_Emulator::CPU_Exception("reg_dump exceeds memory capacity!");}
     for (uint16_t i = 0; i <= X; i++) {
         uint8_t VX = mMemory.read_register_value(i);
-        mMemory.set_memory_at(add_reg_loc + i, VX);
+        mMemory.mmemory_chunk[add_reg_loc + i] = VX;
     }
 }
 
-//TODO: Test
 void Emulator::reg_load(uint16_t cur_inst, uint16_t add_reg_loc) {
     uint16_t X = (cur_inst & 0x0F00) >> 8;
-    if (add_reg_loc + X > 4096) { throw CHIP_8_Emulator::CPU_Exception("reg_dump exceeds memory capacity!");}
+    if (add_reg_loc + X > 4096) { throw CHIP_8_Emulator::CPU_Exception("reg_load exceeds memory capacity!");}
     for (uint16_t i = 0; i <= X; i++) {
         uint8_t load_val = mMemory.read_memory_at(add_reg_loc+i);
-        mMemory.set_register_value(X, load_val);
+        mMemory.set_register_value(i, load_val);
     }
 }
 

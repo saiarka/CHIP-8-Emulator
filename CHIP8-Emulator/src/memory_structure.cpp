@@ -10,7 +10,7 @@ Memory_Structure::Memory_Structure(std::ifstream& rom_stream, int rom_size) {
     rom_stream.read(reinterpret_cast<char*>(mmemory_chunk.data() + 512), static_cast<std::streamsize>(rom_size));
     mprogram_counter = mmemory_chunk.data() + 512;
 
-    mstack_chunk = std::vector<uint64_t>(16, 0);
+    mstack_chunk = std::vector<uint8_t*>(16, 0);
     mstack_index = 0;
     
     V0 = 0;
@@ -182,21 +182,23 @@ void Memory_Structure::set_address_register(uint16_t new_value) {
     address_register = new_value;
 };
 
-
 void Memory_Structure::increment_stack() {
     if (mstack_index == 16) {
         throw CHIP_8_Emulator::CPU_Exception("Stack Function Overflow!");
     }
-    mstack_chunk[mstack_index] = (uint64_t) mprogram_counter + 2;
+
+    mstack_chunk[mstack_index] = (mprogram_counter);
     mstack_index++;
 };
 
+//TODO: 
+//Clarify whether 0x00EE op should be skipped if stack at 0
 void Memory_Structure::decrement_stack() {
     if (mstack_index == 0) {
         throw CHIP_8_Emulator::CPU_Exception("Invalid Memory Reach in Stack!");
     }
     mstack_index--;
-    mprogram_counter = (unsigned char*)mstack_chunk[mstack_index];
+    mprogram_counter = mstack_chunk[mstack_index];
     mstack_chunk[mstack_index] = 0;
 };
 
