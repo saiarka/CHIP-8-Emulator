@@ -9,8 +9,9 @@ class SDL_Container {
 
     public:
         
-        const int SCREEN_WIDTH = 64;
-        const int SCREEN_HEIGHT = 32;
+        //TODO: Temporary hard-coded scale --> change to user input
+        const int SCREEN_WIDTH = 64 * 10;
+        const int SCREEN_HEIGHT = 32 * 10;
 
         std::vector<uint8_t> pixel_screen;
 

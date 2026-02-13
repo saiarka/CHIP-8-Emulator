@@ -189,8 +189,10 @@ void Emulator::eight_instructions(uint16_t cur_inst) {
             mMemory.set_register_value(0x000F, underflow);
             break;
         case 0x0006:
-            mMemory.set_register_value(0x000F, (VX & 0x01));
+            //TODO: Variable instruction depending on arch. 
+            most_sig_set = ((VX & 0b00000001) != 0) ? 1 : 0;
             mMemory.set_register_value(X, (VX >> 1));
+            mMemory.set_register_value(0x000F, most_sig_set);
             break;
         case 0x0007:
             vy_difference = VY - VX;
@@ -241,7 +243,6 @@ void Emulator::twelve_instructions(uint16_t cur_inst) {
 }
 
 //TODO : Optimize
-//Notes: 
 void Emulator::thirteen_instructions(uint16_t cur_inst) {
     uint16_t X = (cur_inst & 0x0F00) >> 8;
     uint16_t Y = (cur_inst & 0x00F0) >> 4;
@@ -250,7 +251,9 @@ void Emulator::thirteen_instructions(uint16_t cur_inst) {
     uint8_t VY = mMemory.read_register_value(Y) % mcontainer.SCREEN_HEIGHT;
     uint16_t add_reg_loc = mMemory.read_address_register() & 0x0FFF;
     mMemory.set_register_value(0x000F, 0);
-    
+
+    //TODO: Temporary hard-coded scale --> change to user input
+    SDL_SetRenderScale(mcontainer.renderer, 10.0f, 10.0f);
     int i = 0, j = 0;
     for (uint8_t row = VY; row < VY + N; row++) {
         uint8_t mem_byte = mMemory.read_memory_at(add_reg_loc + i);

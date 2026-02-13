@@ -44,7 +44,6 @@ class Emulator {
         void reg_dump(uint16_t cur_inst , uint16_t add_reg_loc);
         void reg_load(uint16_t cur_inst, uint16_t add_reg_loc);
         
-
 };
 
 #endif

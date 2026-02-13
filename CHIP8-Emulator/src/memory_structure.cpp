@@ -161,9 +161,11 @@ void Memory_Structure::set_register_value(uint16_t X, uint8_t new_value){
             VE = new_value;
             break;
         case 0x000F:
+            /*
             if (new_value != 0 && new_value != 1) {
                 throw CHIP_8_Emulator::CPU_Exception("Invalid VF Register value input");
             }
+            */
             VF = new_value;
             break;
         default:
