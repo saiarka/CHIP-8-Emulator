@@ -8,8 +8,6 @@
 #include <filesystem>
 #include <cassert>
 #include <chrono>
-#include <thread>
-
 
 #include <SDL3/SDL_main.h>
 
@@ -56,6 +54,13 @@ int main(int argc, char* argv[])
                 quit = true;
             }
 
+            if (emulator.waiting_for_key) {
+                if (e.type == SDL_EVENT_KEY_DOWN) {
+                    emulator.handle_key_press(e);
+                }
+                continue;
+            }
+
             auto cur_cycle_time = std::chrono::steady_clock().now();
             delta = std::chrono::duration<float , std::chrono::milliseconds::period>(cur_cycle_time - last_cycle_time).count();
             accumulator += delta;
@@ -64,11 +69,11 @@ int main(int argc, char* argv[])
                 try {
                     emulator.decode_execute();
                 }catch(const CHIP_8_Emulator::CPU_Exception& e) {
+                    std::cout << e.what() << std::endl;
                     quit = true;  
                 }
                 accumulator -= (1.0 / FREQUENCY);
             }
-
             SDL_RenderPresent(emulator.mcontainer.renderer);
         }
     }

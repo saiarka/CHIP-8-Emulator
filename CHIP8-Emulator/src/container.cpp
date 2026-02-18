@@ -23,6 +23,8 @@ SDL_Container::SDL_Container() {
     SDL_RenderPresent(renderer);
 
     pixel_screen = std::vector<uint8_t>(SCREEN_WIDTH*SCREEN_HEIGHT, 0);
+    //TODO: Temporary hard-coded scale --> change to user input
+    SDL_SetRenderScale(renderer, 10.0f, 10.0f);
 };
 
 SDL_Container::~SDL_Container() {

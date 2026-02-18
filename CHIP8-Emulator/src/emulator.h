@@ -15,6 +15,9 @@ class Emulator {
 
         uint8_t delay_timer;
         uint8_t sound_timer;
+
+        bool waiting_for_key;
+        uint16_t key_val;
       
         Emulator(std::ifstream& rom_stream, int rom_size); //Init 
         ~Emulator() = default; //Destructor
@@ -43,7 +46,9 @@ class Emulator {
         //Helper Functions
         void reg_dump(uint16_t cur_inst , uint16_t add_reg_loc);
         void reg_load(uint16_t cur_inst, uint16_t add_reg_loc);
-        
+        void handle_key_press(const SDL_Event& e);
+        void check_key(const SDL_Scancode code, const bool want_pressed);
+        const SDL_Scancode get_scancode_from_key(const uint8_t key);
 };
 
 #endif

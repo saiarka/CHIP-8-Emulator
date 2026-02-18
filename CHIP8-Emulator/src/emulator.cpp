@@ -9,7 +9,7 @@
 
 
 Emulator::Emulator(std::ifstream& rom_stream, int rom_size) : 
-    mMemory(rom_stream, rom_size), mcontainer() {}
+    mMemory(rom_stream, rom_size), mcontainer(), waiting_for_key(false) {}
 
 //TODO: Needless abstraction? Look into 
 uint16_t Emulator::fetch() {
@@ -85,6 +85,7 @@ void Emulator::zero_instructions(uint16_t cur_inst) {
         case 0x00E0:
             SDL_SetRenderDrawColor(mcontainer.renderer, 0x00, 0x00, 0x00, SDL_ALPHA_OPAQUE);
             SDL_RenderClear(mcontainer.renderer);
+            std::fill(mcontainer.pixel_screen.begin(), mcontainer.pixel_screen.end(), 0);
             SDL_RenderPresent(mcontainer.renderer);
             break;
         case 0x00EE:
@@ -250,60 +251,133 @@ void Emulator::thirteen_instructions(uint16_t cur_inst) {
     uint8_t VX = mMemory.read_register_value(X) % mcontainer.SCREEN_WIDTH;
     uint8_t VY = mMemory.read_register_value(Y) % mcontainer.SCREEN_HEIGHT;
     uint16_t add_reg_loc = mMemory.read_address_register() & 0x0FFF;
-    mMemory.set_register_value(0x000F, 0);
 
-    //TODO: Temporary hard-coded scale --> change to user input
-    SDL_SetRenderScale(mcontainer.renderer, 10.0f, 10.0f);
+    mMemory.set_register_value(0x000F, 0);
     int i = 0, j = 0;
-    for (uint8_t row = VY; row < VY + N; row++) {
+    for (uint8_t row = VY; row < VY + N && row < mcontainer.SCREEN_HEIGHT; row++) {
         uint8_t mem_byte = mMemory.read_memory_at(add_reg_loc + i);
         i++;
         j = 0;
-        for (uint8_t pixel = VX; pixel < VX + 8; pixel++) {
+        for (uint8_t pixel = VX; pixel < VX + 8 && pixel < mcontainer.SCREEN_WIDTH; pixel++) {
             uint8_t cur_pix = mcontainer.pixel_screen[row * mcontainer.SCREEN_WIDTH + pixel];
             uint8_t new_pix = (mem_byte & (0x80 >> j)) >> (7 - j);
             j++;
-            if (cur_pix == 1 && new_pix == 1 && mMemory.read_register_value(0x000F) != 1) {
-                mMemory.set_register_value(0x000F, 1);
-            }
             
-            if ((cur_pix ^ new_pix) == 1) {
-                if (new_pix == 0) {
+            if (new_pix == 1) {
+                uint8_t pixel_change = cur_pix ^ new_pix; 
+                if (pixel_change == 0) {
+                    mMemory.set_register_value(0x000F, 1);
                     SDL_SetRenderDrawColor(mcontainer.renderer, 0x00, 0x00, 0x00, SDL_ALPHA_OPAQUE);
                 }else {
                     SDL_SetRenderDrawColor(mcontainer.renderer, 0xFF, 0xFF, 0xFF, SDL_ALPHA_OPAQUE);
                 }
-                mcontainer.pixel_screen[row * mcontainer.SCREEN_WIDTH + pixel] = new_pix;
+                mcontainer.pixel_screen[row * mcontainer.SCREEN_WIDTH + pixel] = pixel_change;
                 SDL_RenderPoint(mcontainer.renderer, pixel, row);
             }
         }
     }
-
 }
 
-//TODO : Implement instruction functions
 void Emulator::fourteen_instructions(uint16_t cur_inst) {
-
-    return;
+    const uint16_t X = (cur_inst & 0x0F00) >> 8;
+    const uint16_t cond = (cur_inst & 0x00FF);
+    const uint8_t key = mMemory.read_register_value(X) & 0x0F;
+    const SDL_Scancode code = get_scancode_from_key(key);
+    switch(cond) {
+        case 0x009E:
+            check_key(code, 1);
+            break;
+        case 0x00A1:
+            check_key(code, 0);
+            break;
+    }
 }
+
+void Emulator::check_key(const SDL_Scancode code, const bool want_pressed) {
+    const bool* keyboard_states = SDL_GetKeyboardState(nullptr);
+    if (keyboard_states[code] && want_pressed || keyboard_states[code] ^ (!want_pressed)) {
+        mMemory.mprogram_counter += 2;
+    }
+}
+
+
+const SDL_Scancode Emulator::get_scancode_from_key(const uint8_t key) {
+    switch(key) {
+        case 0x00:
+            return SDL_SCANCODE_X;
+            break;
+        case 0x01:
+            return SDL_SCANCODE_1;
+            break;
+        case 0x02:
+            return SDL_SCANCODE_2;
+            break;
+        case 0x03:
+            return SDL_SCANCODE_3;
+            break;
+        case 0x04:
+            return SDL_SCANCODE_Q;
+            break;
+        case 0x05:
+            return SDL_SCANCODE_W;
+            break;
+        case 0x06:
+            return SDL_SCANCODE_E;
+            break;
+        case 0x07:
+            return SDL_SCANCODE_A;
+            break;
+        case 0x08:
+            return SDL_SCANCODE_S;
+            break;
+        case 0x09:
+            return SDL_SCANCODE_D;
+            break;
+        case 0x0A:
+            return SDL_SCANCODE_Z;
+            break;
+        case 0x0B:
+            return SDL_SCANCODE_C;
+            break;
+        case 0x0C:
+            return SDL_SCANCODE_4;
+            break;
+        case 0x0D:
+            return SDL_SCANCODE_R;
+            break;
+        case 0x0E:
+            return SDL_SCANCODE_F;
+            break;
+        case 0x0F:
+            return SDL_SCANCODE_V;
+            break;
+        default:
+            throw CHIP_8_Emulator::CPU_Exception("Invalid Key for Scancode");
+            break;
+    }
+}
+
 
 //TODO : Implement instruction functions
 void Emulator::fifteen_instructions(uint16_t cur_inst) {
     uint16_t detail = cur_inst & 0x00FF;
-    uint16_t VX = mMemory.read_register_value((cur_inst & 0x0F00) >> 8);
+    uint16_t X = (cur_inst & 0x0F00) >> 8;
+    uint16_t VX = mMemory.read_register_value(X);
     uint16_t add_reg = mMemory.read_address_register();
     uint16_t add_reg_loc = add_reg & 0x0FFF; 
     if (add_reg_loc > 4096 || add_reg_loc < 0) { throw CHIP_8_Emulator::CPU_Exception("Invalid address reg loc! (fifteen_inst)");}
 
     //BCD Calc
     uint8_t ones_digit;
-    uint8_t tens_digit;
+    uint8_t tens_digit; 
     uint8_t hundreds_digit;
 
     switch(detail) {
         case 0x0007:
             break;
         case 0x000A:
+            waiting_for_key = true;
+            key_val = X;
             break;
         case 0x0015:
             break;
@@ -328,11 +402,48 @@ void Emulator::fifteen_instructions(uint16_t cur_inst) {
         case 0x0065:
             reg_load(cur_inst, add_reg_loc);
             break;
-        default:
-            throw CHIP_8_Emulator::CPU_Exception("Invalid OP CODE (Failed F Instruction)");
     }
 }
 
+void Emulator::handle_key_press(const SDL_Event& e) {
+    waiting_for_key = false;
+    switch(e.key.scancode) {
+        case SDL_SCANCODE_X:
+            mMemory.set_register_value(key_val, 0);
+        case SDL_SCANCODE_1:
+            mMemory.set_register_value(key_val, 1);
+        case SDL_SCANCODE_2:
+            mMemory.set_register_value(key_val, 2);
+        case SDL_SCANCODE_3:
+            mMemory.set_register_value(key_val, 3);
+        case SDL_SCANCODE_Q:
+            mMemory.set_register_value(key_val, 4);
+        case SDL_SCANCODE_W:
+            mMemory.set_register_value(key_val, 5);
+        case SDL_SCANCODE_E:
+            mMemory.set_register_value(key_val, 6);
+        case SDL_SCANCODE_A:
+            mMemory.set_register_value(key_val, 7);
+        case SDL_SCANCODE_S:
+            mMemory.set_register_value(key_val, 8);
+        case SDL_SCANCODE_D:
+            mMemory.set_register_value(key_val, 9);
+        case SDL_SCANCODE_Z:
+            mMemory.set_register_value(key_val, 0xA);
+        case SDL_SCANCODE_C:
+            mMemory.set_register_value(key_val, 0xB);
+        case SDL_SCANCODE_4:
+            mMemory.set_register_value(key_val, 0xC);
+        case SDL_SCANCODE_R:
+            mMemory.set_register_value(key_val, 0xD);
+        case SDL_SCANCODE_F:
+            mMemory.set_register_value(key_val, 0xE);
+        case SDL_SCANCODE_V:
+            mMemory.set_register_value(key_val, 0xF);
+        default:
+            waiting_for_key = true;
+    }
+}
 
 void Emulator::reg_dump(uint16_t cur_inst, uint16_t add_reg_loc) {
     uint16_t X = (cur_inst & 0x0F00) >> 8;

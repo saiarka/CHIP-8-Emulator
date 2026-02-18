@@ -1,0 +1,2 @@
+/usr/bin/ar qc libChip_Lib.a CMakeFiles/Chip_Lib.dir/emulator.cpp.o CMakeFiles/Chip_Lib.dir/memory_structure.cpp.o CMakeFiles/Chip_Lib.dir/container.cpp.o
+/usr/bin/ranlib libChip_Lib.a

@@ -1,0 +1,1 @@
+/usr/bin/c++ -g CMakeFiles/CHIP8-Emulator.dir/main.cpp.o -o CHIP8-Emulator  -Wl,-rpath,/mnt/c/CHIP-8-Emulator/CHIP8-Emulator/vendors/SDL libChip_Lib.a ../vendors/SDL/libSDL3.so.0.3.7 
