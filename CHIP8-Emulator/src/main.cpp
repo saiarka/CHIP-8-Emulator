@@ -46,33 +46,41 @@ int main(int argc, char* argv[])
     auto last_cycle_time = std::chrono::steady_clock().now();
     float accumulator = 0.0; 
     float delta = 0.0;
+    int delay_counter = 0;
     //TODO: Future improvement
     //Typical emulator designs use error codes to quit out of emulation loop rather than relying on try catch exceptions --> not great for running ROM games
+    // -SDL_Poll waits until set of instructions is executed and we exit accumulator loop
     while (quit == false) {
         while (SDL_PollEvent( &e ) == true) {
             if (e.type == SDL_EVENT_QUIT) {
                 quit = true;
             }
 
-            if (emulator.waiting_for_key) {
-                if (e.type == SDL_EVENT_KEY_DOWN) {
-                    emulator.handle_key_press(e);
-                }
-                continue;
-            }
-
             auto cur_cycle_time = std::chrono::steady_clock().now();
             delta = std::chrono::duration<float , std::chrono::milliseconds::period>(cur_cycle_time - last_cycle_time).count();
             accumulator += delta;
+            last_cycle_time = cur_cycle_time;
+
             while (accumulator > 1.0 / FREQUENCY) {
-                last_cycle_time = cur_cycle_time;
                 try {
-                    emulator.decode_execute();
+                    if (delay_counter == 10) {
+                        emulator.decrement_delay();
+                        delay_counter = 0;
+                    }
+
+                    if (emulator.waiting_for_key) {
+                        if (e.type == SDL_EVENT_KEY_DOWN) {
+                            emulator.handle_key_press(e);
+                        }
+                    }else {
+                        emulator.decode_execute();
+                    }
                 }catch(const CHIP_8_Emulator::CPU_Exception& e) {
                     std::cout << e.what() << std::endl;
                     quit = true;  
                 }
                 accumulator -= (1.0 / FREQUENCY);
+                delay_counter++;
             }
             SDL_RenderPresent(emulator.mcontainer.renderer);
         }

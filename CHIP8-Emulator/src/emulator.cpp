@@ -9,7 +9,7 @@
 
 
 Emulator::Emulator(std::ifstream& rom_stream, int rom_size) : 
-    mMemory(rom_stream, rom_size), mcontainer(), waiting_for_key(false) {}
+    mMemory(rom_stream, rom_size), mcontainer(), waiting_for_key(false), delay_timer(0) {}
 
 //TODO: Needless abstraction? Look into 
 uint16_t Emulator::fetch() {
@@ -77,6 +77,10 @@ void Emulator::decode_execute() {
             throw CHIP_8_Emulator::CPU_Exception("Invalid OP CODE (First 4 bits)");
             break;
     }
+}
+
+void Emulator::decrement_delay() {
+    if (delay_timer != 0) {delay_timer -= 1;}
 }
 
 
@@ -358,7 +362,7 @@ const SDL_Scancode Emulator::get_scancode_from_key(const uint8_t key) {
 }
 
 
-//TODO : Implement instruction functions
+//TODO : Test
 void Emulator::fifteen_instructions(uint16_t cur_inst) {
     uint16_t detail = cur_inst & 0x00FF;
     uint16_t X = (cur_inst & 0x0F00) >> 8;
@@ -374,14 +378,17 @@ void Emulator::fifteen_instructions(uint16_t cur_inst) {
 
     switch(detail) {
         case 0x0007:
+            mMemory.set_register_value(X, delay_timer);
             break;
         case 0x000A:
             waiting_for_key = true;
             key_val = X;
             break;
         case 0x0015:
+            delay_timer = VX;
             break;
         case 0x0018:
+            //TODO: Sound Timer Inst
             break;
         case 0x001E:
             mMemory.set_address_register(VX + add_reg);
@@ -441,7 +448,7 @@ void Emulator::handle_key_press(const SDL_Event& e) {
         case SDL_SCANCODE_V:
             mMemory.set_register_value(key_val, 0xF);
         default:
-            waiting_for_key = true;
+            return;
     }
 }
 

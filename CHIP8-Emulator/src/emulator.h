@@ -24,6 +24,7 @@ class Emulator {
         
         uint16_t fetch();
         void decode_execute();
+        void decrement_delay();
         
         //OP Code Instruction Functions
         void zero_instructions(uint16_t cur_inst);
