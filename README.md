@@ -4,7 +4,7 @@ This is a repository for a CHIP-8 Emulator built in C++17. CHIP-8 is an interpre
 a CHIP-8 interpreter and respective program could run a CHIP-8 game. 
 
 
-<video src="https://github.com/user-attachments/assets/19bb6649-10c1-4295-8f3f-b843a9aae997" width="600" controls></video>
+<video src="https://github.com/user-attachments/assets/19bb6649-10c1-4295-8f3f-b843a9aae997" width="640" height="320" controls></video>
 
 
 ## How to Run
@@ -80,4 +80,5 @@ https://github.com/Timendus/chip8-test-suite?tab=readme-ov-file
 https://web.archive.org/web/20140825173007/http://vanbeveren.byethost13.com/stuff/CHIP8.pdf
 
 https://tobiasvl.github.io/blog/write-a-chip-8-emulator/#fetchdecodeexecute-loop
+
 
