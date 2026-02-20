@@ -7,6 +7,42 @@ a CHIP-8 interpreter and respective program could run a CHIP-8 game.
 
 ## How to Run
 
+This project requires gcc 11.4.0 and CMake:
+
+CMake Installation Link:
+https://cmake.org/download/
+
+Windows GCC:
+https://www.gnu.org/software/gcc/
+
+On Linux or Windows WSL you can simply run the following in terminal:
+`sudo apt install gcc`
+
+Once these are installed, go into a directory you don't mind installing the repository in and enter terminal mode in that directory.
+Then, run the following commands:
+```
+git clone https://github.com/saiarka/CHIP-8-Emulator.git
+cd CHIP-8-Emulator/CHIP-8-Emulator
+git submodule update --init --recursive
+cmake -S . -B out
+cmake --build out
+```
+
+This will clone the repository code, update any dependencies we are using, and build the executable. Afterward, run the following:
+```
+cd out/src
+./CHIP-8-Emulator ../../../test_roms/2-ibm-logo.ch8 500
+```
+This will run the executable with the location of the ROM and a number at the end to indicate frame rate.
+
+If all goes well, you should see a little window pop up with the IBM logo displayed in all its glory.
+If you want to see cooler programs, you simply need to change the .ch8 file you are running. Take a look at 
+the `/test_roms` directory for some examples you can run.
+
+Just to note, game ROMS may require different frame rates. The **Particle Demo** and **Tetris** ROMS run best 
+at a frame rate of `3`. Everything else in the `/test_roms` folder works best at `500`.
+
+
 ## Technical Details
 
 Understanding the underlying hardware of computer systems and how programming paradigms utilize said hardware has always been a fascinating subject to me. To understand it further, I've 
