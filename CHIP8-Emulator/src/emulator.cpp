@@ -174,12 +174,15 @@ void Emulator::eight_instructions(uint16_t cur_inst) {
             break;
         case 0x0001:
             mMemory.set_register_value(X, VX | VY);
+            mMemory.set_register_value(0x000F, 0);
             break;
         case 0x0002:
             mMemory.set_register_value(X, VX & VY);
+            mMemory.set_register_value(0x000F, 0);
             break;
         case 0x0003:
             mMemory.set_register_value(X, VX ^ VY);
+            mMemory.set_register_value(0x000F, 0);
             break;
         case 0x0004:
             big_sum = static_cast<uint16_t>(VX) + static_cast<uint16_t>(VY);
@@ -196,7 +199,7 @@ void Emulator::eight_instructions(uint16_t cur_inst) {
         case 0x0006:
             //TODO: Variable instruction depending on arch. 
             most_sig_set = ((VX & 0b00000001) != 0) ? 1 : 0;
-            mMemory.set_register_value(X, (VX >> 1));
+            mMemory.set_register_value(X, (VY >> 1));
             mMemory.set_register_value(0x000F, most_sig_set);
             break;
         case 0x0007:
@@ -207,7 +210,7 @@ void Emulator::eight_instructions(uint16_t cur_inst) {
             break;
         case 0x000E:
             most_sig_set = ((VX & 0b10000000) != 0) ? 1 : 0;
-            mMemory.set_register_value(X, (VX << 1));
+            mMemory.set_register_value(X, (VY << 1));
             mMemory.set_register_value(0x000F, most_sig_set);
             break;
         default:
@@ -252,8 +255,8 @@ void Emulator::thirteen_instructions(uint16_t cur_inst) {
     uint16_t X = (cur_inst & 0x0F00) >> 8;
     uint16_t Y = (cur_inst & 0x00F0) >> 4;
     uint16_t N = (cur_inst & 0x000F);
-    uint8_t VX = mMemory.read_register_value(X) % mcontainer.SCREEN_WIDTH;
-    uint8_t VY = mMemory.read_register_value(Y) % mcontainer.SCREEN_HEIGHT;
+    uint8_t VX = mMemory.read_register_value(X) % 64; // Default CHIP-8 resolution
+    uint8_t VY = mMemory.read_register_value(Y) % 32;
     uint16_t add_reg_loc = mMemory.read_address_register() & 0x0FFF;
 
     mMemory.set_register_value(0x000F, 0);
@@ -459,6 +462,7 @@ void Emulator::reg_dump(uint16_t cur_inst, uint16_t add_reg_loc) {
         uint8_t VX = mMemory.read_register_value(i);
         mMemory.mmemory_chunk[add_reg_loc + i] = VX;
     }
+    mMemory.set_address_register(add_reg_loc + X + 1);
 }
 
 void Emulator::reg_load(uint16_t cur_inst, uint16_t add_reg_loc) {
@@ -468,6 +472,7 @@ void Emulator::reg_load(uint16_t cur_inst, uint16_t add_reg_loc) {
         uint8_t load_val = mMemory.read_memory_at(add_reg_loc+i);
         mMemory.set_register_value(i, load_val);
     }
+    mMemory.set_address_register(add_reg_loc + X + 1);
 }
 
 

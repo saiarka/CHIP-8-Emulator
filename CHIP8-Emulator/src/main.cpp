@@ -11,17 +11,15 @@
 
 #include <SDL3/SDL_main.h>
 
-//TODO: Make variable / input
-//500 Hz Clock Frequency
-#define FREQUENCY 500
-
 int main(int argc, char* argv[])
 {
 
-    if (argc != 2) {
-        std::cout << "Invalid Number of Arguments, Please Include ROM Location" << std::endl;
+    if (argc != 3) {
+        std::cout << "Invalid Number of Arguments : ./executable ROM_LOCATION FREQUENCY" << std::endl;
         return 0;
     }
+
+    const int FREQUENCY = std::stoi(argv[2]);
 
     std::string rom_name = argv[1];
     std::ifstream rom_stream(rom_name, std::ios::binary);
@@ -47,43 +45,41 @@ int main(int argc, char* argv[])
     float accumulator = 0.0; 
     float delta = 0.0;
     int delay_counter = 0;
+
     //TODO: Future improvement
     //Typical emulator designs use error codes to quit out of emulation loop rather than relying on try catch exceptions --> not great for running ROM games
-    // -SDL_Poll waits until set of instructions is executed and we exit accumulator loop
     while (quit == false) {
         while (SDL_PollEvent( &e ) == true) {
             if (e.type == SDL_EVENT_QUIT) {
                 quit = true;
+            }else if (e.type == SDL_EVENT_KEY_DOWN && emulator.waiting_for_key) {
+                emulator.handle_key_press(e);
             }
-
-            auto cur_cycle_time = std::chrono::steady_clock().now();
-            delta = std::chrono::duration<float , std::chrono::milliseconds::period>(cur_cycle_time - last_cycle_time).count();
-            accumulator += delta;
-            last_cycle_time = cur_cycle_time;
-
-            while (accumulator > 1.0 / FREQUENCY) {
-                try {
-                    if (delay_counter == 10) {
-                        emulator.decrement_delay();
-                        delay_counter = 0;
-                    }
-
-                    if (emulator.waiting_for_key) {
-                        if (e.type == SDL_EVENT_KEY_DOWN) {
-                            emulator.handle_key_press(e);
-                        }
-                    }else {
-                        emulator.decode_execute();
-                    }
-                }catch(const CHIP_8_Emulator::CPU_Exception& e) {
-                    std::cout << e.what() << std::endl;
-                    quit = true;  
-                }
-                accumulator -= (1.0 / FREQUENCY);
-                delay_counter++;
-            }
-            SDL_RenderPresent(emulator.mcontainer.renderer);
         }
+
+        auto cur_cycle_time = std::chrono::steady_clock().now();
+        delta = std::chrono::duration<float , std::chrono::milliseconds::period>(cur_cycle_time - last_cycle_time).count();
+        accumulator += delta;
+        last_cycle_time = cur_cycle_time;
+
+        while (accumulator > 1.0 / FREQUENCY) {
+            try {
+                if (delay_counter == 10) {
+                    emulator.decrement_delay();
+                    delay_counter = 0;
+                }
+
+                if (!emulator.waiting_for_key) {
+                    emulator.decode_execute();
+                }
+            }catch(const CHIP_8_Emulator::CPU_Exception& e) {
+                std::cout << e.what() << std::endl;
+                quit = true;  
+            }
+            accumulator -= (1.0 / FREQUENCY);
+            delay_counter++;
+        }
+        SDL_RenderPresent(emulator.mcontainer.renderer);
     }
 
 	return 0;
